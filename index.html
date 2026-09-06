@@ -727,7 +727,10 @@ function renderDashboard(){
  const tr=tx.filter(t=>t.type==="TRANSFER OUT").reduce((n,t)=>n+t.qty,0);
  const low=ITEMS.filter(i=>{if(bu&&i.bu!==bu)return false;let q=ws.reduce((sum,wh)=>sum+balance(i.code,wh),0);return q>0&&q<=10}).length;
  const dp=state.disposals.filter(d=>d.status==="PENDING" && (!w||d.warehouse===w)&&(!r||d.region===r)&&(!bu||d.bu===bu)).reduce((n,d)=>n+d.qty,0);
- ["kStock","kIn","kOut","kTransfer","kLow","kDisposal"].forEach((id,i)=>document.getElementById(id).textContent=money([stock,ins,outs,tr,low,dp][i]));
+ ["kStock","kIn","kOut","kTransfer","kLow","kDisposal"].forEach((id,i)=>{
+  const el = document.getElementById(id);
+  if (el) el.textContent = money([stock,ins,outs,tr,low,dp][i]);
+});
  let byWeek={}; tx.forEach(t=>{byWeek[t.week]??={in:0,out:0}; if(t.type==="STOCK IN")byWeek[t.week].in+=t.qty;if(t.type==="STOCK OUT")byWeek[t.week].out+=t.qty});
  const vals=Object.values(byWeek),max=Math.max(1,...vals.flatMap(x=>[x.in,x.out]));
  document.getElementById("weekChart").innerHTML=Object.keys(byWeek).sort().slice(-8).map(k=>`<div class="barrow"><b>Week ${k}</b><div><div class="bar"><i style="width:${byWeek[k].in/max*100}%"></i></div><div class="bar" style="margin-top:4px"><i style="width:${byWeek[k].out/max*100}%"></i></div></div><span>+${money(byWeek[k].in)} / -${money(byWeek[k].out)}</span></div>`).join('')||'<div class="sub">No tracked movements yet.</div>';
@@ -1784,6 +1787,7 @@ function renderSyncQueueV2(){
   const body=document.getElementById("syncQueueRows"); if(!body)return;
   body.innerHTML=state.syncQueue.slice().reverse().slice(0,100).map(x=>`<tr><td>${x.date}</td><td>${x.type}</td><td>${x.rows?.length||0}</td><td>${x.status}</td><td>${new Date(x.createdAt).toLocaleString()}</td></tr>`).join("")||'<tr><td colspan="5">No queued extracts yet.</td></tr>';
 }
+const DEFAULT_RMAS_GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwVmaOLg7VxR1EmtTWTfaTgKBeztrmo5k3rpfM7zlq3Hb0rTQOSBxXb9aBKkyu3uPp41g/exec";
 function initDailyExtractV2(){
   state.syncConfig=state.syncConfig||{};
   state.syncConfig.url=DEFAULT_RMAS_GOOGLE_WEB_APP_URL;
@@ -3065,44 +3069,7 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
   });
 })();
 </script>
-<!-- FIREBASE REALTIME SYNC ENGINE -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyB3G5JP7DY36orJKn9q737gG7BbGiEQ6fQ",
-    authDomain: "rmas-tool.firebaseapp.com",
-    databaseURL: "https://rmas-tool-default-rtdb.firebaseio.com",
-    projectId: "rmas-tool",
-    storageBucket: "rmas-tool.firebasestorage.app",
-    messagingSenderId: "507664166536",
-    appId: "1:507664166536:web:fd9835d42891b9d275b93d",
-    measurementId: "G-PCBBKC1TG6"
-  };
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  const db = firebase.database();
-
-  function syncInventoryToCloud(inventoryData) {
-    db.ref('inventory_data').set(inventoryData)
-      .then(() => console.log("Live Sync: Data updated on cloud!"))
-      .catch(err => console.error("Sync Error:", err));
-  }
-
-  db.ref('inventory_data').on('value', (snapshot) => {
-    const cloudData = snapshot.val();
-    if (cloudData) {
-      localStorage.setItem('inventory', JSON.stringify(cloudData));
-      localStorage.setItem('pos_inventory', JSON.stringify(cloudData));
-      if (typeof renderInventory === 'function') renderInventory();
-      if (typeof loadProducts === 'function') loadProducts();
-      if (typeof updateUI === 'function') updateUI();
-    }
-  });
-</script>
 </body>
 </html>
 
