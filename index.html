@@ -27,7 +27,7 @@ select,input,textarea{border:1px solid #d4dae3;border-radius:8px;padding:9px 10p
 button.primary,button.secondary,button.danger,button.success{border:0;border-radius:8px;padding:10px 13px;cursor:pointer;font-weight:700}
 .primary{background:var(--blue);color:#fff}.secondary{background:#eef2f7;color:#344054}.danger{background:#fee4e2;color:#b42318}.success{background:#dcfae6;color:#087443}
 table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{font-size:10px;text-transform:uppercase;color:var(--muted);background:#f8fafc;position:sticky;top:0}
-.table-wrap{overflow:auto;max-height:570px;border:1px solid var(--line);border-radius:9px}
+.table-wrap{overflow:auto;max-height:570px;border:1px solid var(--line);border-radius:999px}
 .thumb{width:70px;height:48px;object-fit:contain;border:1px solid #eee;border-radius:6px;background:#fff}.thumb-lg{width:130px;height:88px;object-fit:contain;border:1px solid #eee;border-radius:8px}
 .status{display:inline-block;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:700}
 .status.active,.active{background:#dcfae6;color:#087443}
@@ -43,24 +43,14 @@ table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 8px;
 .item-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.item-card{content-visibility:auto;contain-intrinsic-size:180px 220px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}.item-card:hover{border-color:#9ab1ff}.item-card img{width:100%;height:110px;object-fit:contain}.item-card b{display:block;font-size:12px;margin-top:6px}.item-card small{color:var(--muted);display:block;margin-top:3px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.48);display:none;align-items:center;justify-content:center;z-index:30;padding:20px}.modal.open{display:flex}.modal-box{background:#fff;border-radius:14px;max-width:720px;width:100%;max-height:90vh;overflow:auto;padding:20px}
 .toast{position:fixed;right:22px;bottom:22px;background:#182230;color:#fff;padding:11px 14px;border-radius:999px;display:none;z-index:50;font-size:13px}
-@media(max-width:1100px){.cards{grid-template-columns:repeat(3,1fr)}.item-grid{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
-@media(max-width:800px){aside{width:62px}aside nav button span{display:none}main{padding:14px}.formgrid{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}.item-grid{grid-template-columns:repeat(2,1fr)}}
-</style>
 
-<style>
-#loginGate{position:fixed;inset:0;background:linear-gradient(135deg,#0c175f,#1428a0);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+#loginGate{position:fixed;inset:0;background:linear-gradient(135deg,#101c74,#1428a0);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
 .login-card{width:min(420px,100%);background:#fff;border-radius:16px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
 .login-card h2{margin:0 0 5px}.login-card p{font-size:12px;color:#667085}.login-card input{width:100%;margin:7px 0}.login-card button{width:100%;margin-top:8px}.login-error{color:#b42318;font-size:12px;min-height:18px}
 .user-chip{display:flex;align-items:center;gap:8px}.logout{border:1px solid rgba(255,255,255,.3);background:transparent;color:white;padding:7px 10px;border-radius:8px;cursor:pointer}
-.locked{opacity:.55;pointer-events:none}
-</style>
 
-<style>
-body{background:linear-gradient(135deg,#f5f8fc 0%,#eef4fb 100%);font-family:Arial,Helvetica,sans-serif}
-header{background:linear-gradient(135deg,#071d49,#0b4ea2 65%,#0b74d1);padding:14px 24px;box-shadow:0 5px 18px rgba(8,45,95,.18)}
-.header-inner{max-width:none}
-.brand{display:flex;align-items:center;gap:12px;font-size:18px;letter-spacing:.2px}
-.brand:before{content:"";width:48px;height:48px;background:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeoAAAHqCAYAAADLbQ06AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAP+lSURBVHhe7P1ZlyTJld8J/q6IqNrmW7jHHhmRkSuABAqFqkIt3KZJ9mynn+YLzBeY7zMv0y9z+pw5w5mXbpLFITlsHg7ZbKKKVSgsBSATuWfGvvnutqiKyJ2HK2pm7umRSACVQCbS/pkWbqaqpqYqKiJ/ubv8D//Xsf6f/y8DVlhhhRVWWGGFLxZOjhX32hvh7PYVVlhhhRVWWOELgNGaIKqqZ3essMIKK6ywwgpfDLizG1ZYYYUVVlhhhS8OVkS9wgorrLDCCl9grIh6hRVWWGGFFb7AWBH1CiussMIKK3yBsSLqFVZYYYUVVvgCY0XUK6ywwgorrPAFxoqoV1hhhRVWWOELjFUc9Qor/FrI5QUggOd5A0pgvk/Lq1spy9Jxn4rndvyLiufc2PNu45OHd2372aGfQf745O+ssMKXFxuiXmGFXwsJaAr1eDIVGTenF1dIQQBUySookApTOAFXuF4VnLNXORwAUcjZPrjuhIAkwJcPHfOXD/ZdBYScEyIOd/ZYZ0sHVft9obtYAVVSzjjnECcg5fTZrofu2A7Lq5BzeFI5fXwG1E47x7yd5p+XF0HdRc9v8gxc2SNkPGDtzBmqd2efyQorfAmwIuoVVvi10BF1RudEvZCqHYoATo15taMfAUWQsv8scWj5Z86b8/0LlpTCW6e+tzSa7Xs6Z6ruPLYiEBAp+wvFSUdusjjn0smXJwqhMOBZtus+n9muZ7bNz6W2Uc6QtiGfIefu6nTpBJ/8QS1E3X37LNxzf2+FFb6YWBH1Civ8WshAxCjRkQnokjTnUUQz6DJtCIhDcSTNRDLOSaFt+w/t6FJOEXVGQRXB4QFtleDsM2TSXPJ2RrwdCRcxXTWjOYMTkiipOxZBFbImRDxOOhpTMnl+6SIdicspEj2P9D6xbb7B7lXoiLrskFMHfYJm562nS1L9OTh1RecdV35yfosrrPAFx4qoV1jh14Kic+WqkOcqWOMDpwnRVCTvZeIQFIe6M5KfdAQIudMNqxhZ0hGlMY0AXo2iO5w7nOfkWqhVTYrPIqSyzfYrWbP9RrkOmZ/PvrNgNyWXV4dOpWx6g4U24Sy6qxe1oxZw5fydnuG04ruDqJkLPnHu5YY/pxlg/uOL1worfAmwIuoVVvg1oEuvDtKprMmgyaRp6ei4SKfdSxwqnpwyoop4jzgPqrQxgXM4cabSFmxfIcuoSnZCVu2013i3YB/t1OJi5JyyImIStCv7NCuxTTiEqvb2G0Uzrlnt2lUR0SVpWklkWu8KUduPl6UHkBEgLJH3qRbq3mon1nYvB/j5t0prncu53fXbTZzeJ3Tblht6vhGkLAhWIvUKXxKsiHqFFX4NdGTSfVjQjhGEFqIDUNd9Q1FNkBTwiHg0mXQqrhC1+XMRUyFI15lzhTYufnfmIMriGqRIy3YFSszFQa0ox6UIsDEqkqHnoCoObKrCdGoLiV4tBC84Kep7IBUp1glkBzP7mYVMrKb8d2LStC/+1yaVL7VUR6KnSJpC0B1ZM2/FcuoFH3e29iWeXZbLjajLbwrz3+1mOtMWmLp/hRW+DFgR9Qor/BpYJuqFJN0Rk6m1WzWS7Y5VIKuSknljV868xHOGNiptyibwOce0yTRtMsu1AxFP28J0ljhpW9raQ+0QMfKdTSMpZ0JweO/IKuSUySkhTun1PcEHYgNx3OJSYtgX1kYBkZrxSSK1LXUFvcrT73uGPY93Hs1KihkRNQ/yUFEFqMq9aTZi7jkIYg7pvmsXO2DRcJJRsTaab4K5NN2p3ztOZ/mvKNmd3nx2EptPa8baULzbRSAguBVRr/AlwoqoV1jh18SSGdfkWE0ggoqjUWFa/MITME1Kk5Ssihyb8XjWkHKmbeF4nDg8PmE2a3Cuos3KyXjC0XhCVqjrPgocn5ywd3AIvT6+V+G8p21axuMxTdsgIvTqHqO1EZPJhKOjI5qmod/vs7GxwaDXZzaZsb9/QGxa1tfXuHRxh15dM5ueMBufUAXP+vqQzbU1Bv0+DiWlCDlTe8/O1gajQuTBeyQ7AkKvUnpei7TuqLyjckbcUiTjLjxtWft8Vp52WqRxPdPILqPSWe0XXK8l9E2xtl+2c885HqgQwoqmV/gSYUXUK6zw66KYcgFEEhpb8IHoPPstPBzPeDptmTrH/jjw7GDK8fgYJxnpO95/+Iy9gwNwjn6/z/HJhMbPn3EyntIfjnAhMGsi48mE6awlKlRVoK5qDveOaZsWgF6vpt8fkHPi+PiYyXhCr99jtLZGVVXMpjNOTk7IOdMf9OmtrZGDZzydMJtMICfqumJ9bciw3yd4SLFF2xYRGPRrBoMBg15NXx31LLLWq1lfG7ExWmNtMKDnA0GgdkK/Cgx7NRvDwMaaMOx5elWFD2bb9g56XozAiwq9LrbtAFSA5M5rPiHFW90Czzs3uI7txbQHCioOJIA4cnFMs6NN4q8wqXpF1Ct8WbAi6hVW+HWhkJNJ0yIJcov6ipl4Hk4y/#307,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') no-repeat center/contain}
+@media(max-width:1100px){.cards{grid-template-columns:repeat(3,1fr)}.item-grid{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}}
+@media(max-width:800px){aside{width:62px}aside nav button span{display:none}main{padding:14px}.formgrid{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}.item-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -193,7 +183,6 @@ header{background:linear-gradient(135deg,#071d49,#0b4ea2 65%,#0b74d1);padding:14
               </tr>
             </thead>
             <tbody id="catalogTableBody">
-              <!-- Dynamically populated -->
             </tbody>
           </table>
         </div>
@@ -230,7 +219,6 @@ header{background:linear-gradient(135deg,#071d49,#0b4ea2 65%,#0b74d1);padding:14
               </tr>
             </thead>
             <tbody id="txTableBody">
-              <!-- Dynamically populated -->
             </tbody>
           </table>
         </div>
@@ -308,7 +296,6 @@ header{background:linear-gradient(135deg,#071d49,#0b4ea2 65%,#0b74d1);padding:14
 <div class="toast" id="toast">Notification Message</div>
 
 <script>
-// INITIAL DATASETS
 let catalogData = [
   { sku: "SK-S24-001", name: "Galaxy S24 Ultra Counter Display", category: "Display Units", stock: 150, min: 30, status: "Active", loc: "Rack A-01", img: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231428a0'/><text x='50%' y='50%' font-size='12' fill='%23fff' text-anchor='middle' dy='.3em'>S24 Display</text></svg>" },
   { sku: "SK-S24-002", name: "S24 Series Lightbox Backdrop", category: "Lightboxes", stock: 12, min: 20, status: "Low Stock", loc: "Rack B-04", img: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%232563eb'/><text x='50%' y='50%' font-size='12' fill='%23fff' text-anchor='middle' dy='.3em'>Lightbox</text></svg>" },
@@ -322,7 +309,6 @@ let txData = [
   { ref: "TX-2026-003", date: "2026-03-03 09:00", type: "OUT", sku: "SK-ZFL-001", qty: 15, user: "Store Rep B", status: "Pending" }
 ];
 
-// AUTHENTICATION LOGIC
 function attemptLogin() {
   const u = document.getElementById('usernameInput').value;
   const p = document.getElementById('passwordInput').value;
@@ -330,7 +316,6 @@ function attemptLogin() {
     document.getElementById('loginGate').style.display = 'none';
     showToast('Welcome back, System Admin!');
   } else if(u !== '' && p !== '') {
-    // Basic fallback for demo login
     document.getElementById('loginGate').style.display = 'none';
     document.getElementById('userRoleBadge').innerText = 'Role: Staff (' + u + ')';
     showToast('Logged in as ' + u);
@@ -345,7 +330,6 @@ function logout() {
   document.getElementById('passwordInput').value = '';
 }
 
-// TAB NAVIGATION
 function switchTab(tabId, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
@@ -353,7 +337,6 @@ function switchTab(tabId, btn) {
   btn.classList.add('active');
 }
 
-// RENDER FUNCTIONS
 function renderCatalog() {
   const tbody = document.getElementById('catalogTableBody');
   tbody.innerHTML = '';
@@ -414,7 +397,6 @@ function updateKPIs() {
   document.getElementById('kpiEOL').innerText = eol;
 }
 
-// FILTER LOGIC
 function filterCatalog() {
   const q = document.getElementById('catalogSearch').value.toLowerCase();
   const cat = document.getElementById('catalogCategoryFilter').value;
@@ -447,7 +429,6 @@ function filterTx() {
   });
 }
 
-// MODAL CONTROLS
 function viewItem(idx) {
   const item = catalogData[idx];
   document.getElementById('modalTitle').innerText = item.name;
@@ -497,7 +478,6 @@ function handleAddItem(e) {
   showToast('New SKU added successfully!');
 }
 
-// IMPORT & EXPORT
 function exportDailyData() {
   const extractObj = {
     extractDate: new Date().toISOString(),
@@ -542,7 +522,6 @@ function handleFileImport(e) {
   reader.readAsText(file);
 }
 
-// TOAST NOTIFICATIONS
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.innerText = msg;
@@ -550,7 +529,6 @@ function showToast(msg) {
   setTimeout(() => { t.style.display = 'none'; }, 3000);
 }
 
-// INITIALIZATION
 window.onload = function() {
   renderCatalog();
   renderTx();
