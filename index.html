@@ -3346,7 +3346,7 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
   window.exportDailyBundle=async()=>{await handleExport('INVENTORY_SNAPSHOT');await handleExport('DAILY_TRANSACTIONS');};
 })();
 </script>
-<!-- FIREBASE AUTOMATIC FULL-SYSTEM SYNC ENGINE -->
+<!-- FIREBASE AUTOMATIC FULL-SYSTEM SYNC ENGINE (WITH AUTO-RELOAD) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
@@ -3371,7 +3371,7 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
 
   let isReceivingFromCloud = false;
 
-  // 3. AUTOMATIC INTERCEPTOR (Nagse-sync sa lahat ng ginagawa mo: warehouse transfers, pictures, sales, etc.)
+  // 3. AUTOMATIC INTERCEPTOR (Huhulihin ang anumang Stock-In, Transfer, Picture, at Sales)
   const originalSetItem = localStorage.setItem;
   localStorage.setItem = function(key, value) {
     originalSetItem.apply(this, arguments);
@@ -3386,7 +3386,9 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
     }
   };
 
-  // 4. CLOUD LISTENER (Awtomatikong ipinapakita ang pagbabago sa ibang phone/laptop)
+  // 4. CLOUD LISTENER (Awtomatikong mag-a-update at magre-refresh sa Mobile)
+  let isInitialLoad = true;
+
   db.ref('live_system').on('value', (snapshot) => {
     const cloudState = snapshot.val();
     if (cloudState) {
@@ -3399,11 +3401,12 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
 
       isReceivingFromCloud = false;
 
-      // Kusa nitong ire-refresh ang buong UI ng POS
-      if (typeof renderAll === 'function') renderAll();
-      else if (typeof renderInventory === 'function') renderInventory();
-      else if (typeof loadProducts === 'function') loadProducts();
-      else if (typeof updateUI === 'function') updateUI();
+      // Kapag may bagong stock-in sa laptop, kusa itong magre-reload sa mobile para lumabas agad ang pagbabago!
+      if (!isInitialLoad) {
+        console.log("Cloud update detected! Reloading page...");
+        location.reload();
+      }
+      isInitialLoad = false;
     }
   });
 </script>
