@@ -3346,3 +3346,64 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
   window.exportDailyBundle=async()=>{await handleExport('INVENTORY_SNAPSHOT');await handleExport('DAILY_TRANSACTIONS');};
 })();
 </script>
+<!-- FIREBASE AUTOMATIC FULL-SYSTEM SYNC ENGINE -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+  // 1. Firebase Credentials
+  const firebaseConfig = {
+    apiKey: "AIzaSyB3G5JP7DY36orJKn9q737gG7BbGiEQ6fQ",
+    authDomain: "rmas-tool.firebaseapp.com",
+    databaseURL: "https://rmas-tool-default-rtdb.firebaseio.com",
+    projectId: "rmas-tool",
+    storageBucket: "rmas-tool.firebasestorage.app",
+    messagingSenderId: "507664166536",
+    appId: "1:507664166536:web:fd9835d42891b9d275b93d",
+    measurementId: "G-PCBBKC1TG6"
+  };
+
+  // 2. Initialize Firebase
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.database();
+
+  let isReceivingFromCloud = false;
+
+  // 3. AUTOMATIC INTERCEPTOR (Nagse-sync sa lahat ng ginagawa mo: warehouse transfers, pictures, sales, etc.)
+  const originalSetItem = localStorage.setItem;
+  localStorage.setItem = function(key, value) {
+    originalSetItem.apply(this, arguments);
+
+    if (!isReceivingFromCloud) {
+      try {
+        const parsedValue = JSON.parse(value);
+        db.ref('live_system/' + key).set(parsedValue);
+      } catch(e) {
+        db.ref('live_system/' + key).set(value);
+      }
+    }
+  };
+
+  // 4. CLOUD LISTENER (Awtomatikong ipinapakita ang pagbabago sa ibang phone/laptop)
+  db.ref('live_system').on('value', (snapshot) => {
+    const cloudState = snapshot.val();
+    if (cloudState) {
+      isReceivingFromCloud = true;
+
+      Object.keys(cloudState).forEach(key => {
+        const val = typeof cloudState[key] === 'object' ? JSON.stringify(cloudState[key]) : cloudState[key];
+        originalSetItem.call(localStorage, key, val);
+      });
+
+      isReceivingFromCloud = false;
+
+      // Kusa nitong ire-refresh ang buong UI ng POS
+      if (typeof renderAll === 'function') renderAll();
+      else if (typeof renderInventory === 'function') renderInventory();
+      else if (typeof loadProducts === 'function') loadProducts();
+      else if (typeof updateUI === 'function') updateUI();
+    }
+  });
+</script>
