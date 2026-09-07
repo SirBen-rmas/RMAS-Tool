@@ -3314,35 +3314,36 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
   window.exportDailyBundle=async()=>{await handleExport('INVENTORY_SNAPSHOT');await handleExport('DAILY_TRANSACTIONS');};
 })();
 </script>
-<!-- FIREBASE FULL AUTOMATIC SYNC WITH UI RE-RENDER -->
+<!-- FIREBASE FULL AUTOMATIC SYNC WITH INVALID PATH FILTER -->
 <script>
 (function() {
-  // This page loads the Firebase compat build, so use its API consistently.
-  // The previous code mixed modular and compat APIs and left `db` undefined
-  // whenever an app had already been initialized.
-  if (typeof firebase === 'undefined' || typeof firebase.database !== 'function') return;
+  if (typeof firebase === 'undefined') return;
 
-  const firebaseConfig = {
-  apiKey: "AIzaSyB3G5JP7DY36orJKn9q737gG7BbGiEQ6fQ",
-  authDomain: "rmas-tool.firebaseapp.com",
-  databaseURL: "https://rmas-tool-default-rtdb.firebaseio.com",
-  projectId: "rmas-tool",
-  storageBucket: "rmas-tool.firebasestorage.app",
-  messagingSenderId: "507664166536",
-  appId: "1:507664166536:web:fd9835d42891b9d275b93d",
-  measurementId: "G-PCBBKC1TG6"
-  };
+  if (!firebase.apps.length) {
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "your-app.firebaseapp.com",
+      databaseURL: "https://your-app-default-rtdb.firebaseio.com",
+      projectId: "your-app",
+      storageBucket: "your-app.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+    firebase.initializeApp(firebaseConfig);
+  }
 
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   let isReceivingFromCloud = false;
 
-  // 2. INTERCEPTOR
+  // 1. INTERCEPTOR: May filter na para sa bawal na Firebase keys
   const originalSetItem = localStorage.setItem;
   localStorage.setItem = function(key, value) {
     originalSetItem.apply(this, arguments);
 
-    if (!isReceivingFromCloud) {
+    // Filter: Huwag i-sync sa Firebase kung internal key ito o may bawal na characters
+    const isInvalidKey = /[\.\#\$\/\[\]\:]/.test(key) || key.startsWith('firebase:');
+
+    if (!isReceivingFromCloud && !isInvalidKey) {
       try {
         const parsedValue = JSON.parse(value);
         db.ref('live_system/' + key).set(parsedValue);
@@ -3352,12 +3353,13 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
     }
   };
 
-  // 3. CLOUD LISTENER & RE-RENDER
+  // 2. CLOUD LISTENER & RE-RENDER
   db.ref('live_system').on('value', (snapshot) => {
     const cloudState = snapshot.val();
     if (cloudState) {
       isReceivingFromCloud = true;
 
+      // I-update ang localStorage
       Object.keys(cloudState).forEach(key => {
         const val = typeof cloudState[key] === 'object' ? JSON.stringify(cloudState[key]) : cloudState[key];
         originalSetItem.call(localStorage, key, val);
@@ -3365,7 +3367,16 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
 
       isReceivingFromCloud = false;
 
-      if (typeof load === 'function') load();
+      // Force reload ng global variables bago mag-render
+      try {
+        if (typeof load === 'function') load();
+        if (localStorage.getItem('ITEMS')) ITEMS = JSON.parse(localStorage.getItem('ITEMS'));
+        if (localStorage.getItem('state')) state = JSON.parse(localStorage.getItem('state'));
+      } catch(e) {
+        console.log("Re-parsing state notice:", e);
+      }
+
+      // Re-render UI
       if (typeof renderDashboard === 'function') renderDashboard();
       if (typeof renderInventory === 'function') renderInventory();
       if (typeof renderSyncQueueV2 === 'function') renderSyncQueueV2();
