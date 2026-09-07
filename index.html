@@ -254,7 +254,8 @@ h1{font-size:28px;color:#0b2144}
   .mobile-dock button{font-size:8px;}
 }
 </style>
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 <div id="loginGate">
@@ -3313,51 +3314,49 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
   window.exportDailyBundle=async()=>{await handleExport('INVENTORY_SNAPSHOT');await handleExport('DAILY_TRANSACTIONS');};
 })();
 </script>
-<!-- FIREBASE FULL AUTOMATIC SYNC (FIXED DUPLICATE DECLARATION) -->
+<!-- FIREBASE FULL AUTOMATIC SYNC WITH UI RE-RENDER -->
 <script>
-  (function() {
-    // Gumamit ng existing Firebase App para iwas Duplicate Error
-    if (typeof firebase === 'undefined') return;
+(function() {
+  if (typeof firebase === 'undefined') return;
 
-    const db = firebase.database();
-    let isReceivingFromCloud = false;
+  const db = firebase.database();
+  let isReceivingFromCloud = false;
 
-    // 1. INTERCEPTOR: Automatic sync kapag may binago sa Laptop/Mobile
-    const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
-      originalSetItem.apply(this, arguments);
+  // 1. INTERCEPTOR: Pag may binago sa device na ito, i-sync sa Firebase
+  const originalSetItem = localStorage.setItem;
+  localStorage.setItem = function(key, value) {
+    originalSetItem.apply(this, arguments);
 
-      if (!isReceivingFromCloud) {
-        try {
-          const parsedValue = JSON.parse(value);
-          db.ref('live_system/' + key).set(parsedValue);
-        } catch(e) {
-          db.ref('live_system/' + key).set(value);
-        }
+    if (!isReceivingFromCloud) {
+      try {
+        const parsedValue = JSON.parse(value);
+        db.ref('live_system/' + key).set(parsedValue);
+      } catch(e) {
+        db.ref('live_system/' + key).set(value);
       }
-    };
+    }
+  };
 
-    // 2. CLOUD LISTENER: Magre-reload ang screen kapag may bagong stock/transfer mula sa kabilang device
-    let isInitialLoad = true;
+  // 2. CLOUD LISTENER: Pag may bagong data sa cloud, i-update ang localStorage AT I-RERENDER ANG UI
+  db.ref('live_system').on('value', (snapshot) => {
+    const cloudState = snapshot.val();
+    if (cloudState) {
+      isReceivingFromCloud = true;
 
-    db.ref('live_system').on('value', (snapshot) => {
-      const cloudState = snapshot.val();
-      if (cloudState) {
-        isReceivingFromCloud = true;
+      // I-update ang localStorage
+      Object.keys(cloudState).forEach(key => {
+        const val = typeof cloudState[key] === 'object' ? JSON.stringify(cloudState[key]) : cloudState[key];
+        originalSetItem.call(localStorage, key, val);
+      });
 
-        Object.keys(cloudState).forEach(key => {
-          const val = typeof cloudState[key] === 'object' ? JSON.stringify(cloudState[key]) : cloudState[key];
-          originalSetItem.call(localStorage, key, val);
-        });
+      isReceivingFromCloud = false;
 
-        isReceivingFromCloud = false;
-
-        if (!isInitialLoad) {
-          console.log("Cloud update detected! Reloading page...");
-          location.reload();
-        }
-        isInitialLoad = false;
-      }
-    });
-  })();
+      // 🚀 ETO ANG SUSI: I-trigger ang pag-refresh ng screen ng UI para sa lahat!
+      if (typeof load === 'function') load(); 
+      if (typeof renderDashboard === 'function') renderDashboard();
+      if (typeof renderInventory === 'function') renderInventory();
+      if (typeof renderSyncQueueV2 === 'function') renderSyncQueueV2();
+    }
+  });
+})();
 </script>
