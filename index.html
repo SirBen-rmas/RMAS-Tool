@@ -3319,10 +3319,24 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
 (function() {
   if (typeof firebase === 'undefined') return;
 
-  const db = firebase.database();
-  let isReceivingFromCloud = false;
+  // 1. SAFETY CHECK: Siguraduhing na-initialize na ang Firebase App
+  if (!firebase.apps.length) {
+    const firebaseConfig = {
+  apiKey: "AIzaSyB3G5JP7DY36orJKn9q737gG7BbGiEQ6fQ",
+  authDomain: "rmas-tool.firebaseapp.com",
+  databaseURL: "https://rmas-tool-default-rtdb.firebaseio.com",
+  projectId: "rmas-tool",
+  storageBucket: "rmas-tool.firebasestorage.app",
+  messagingSenderId: "507664166536",
+  appId: "1:507664166536:web:fd9835d42891b9d275b93d",
+  measurementId: "G-PCBBKC1TG6"
+};
 
-  // 1. INTERCEPTOR: Pag may binago sa device na ito, i-sync sa Firebase
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+  // 2. INTERCEPTOR
   const originalSetItem = localStorage.setItem;
   localStorage.setItem = function(key, value) {
     originalSetItem.apply(this, arguments);
@@ -3337,13 +3351,12 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
     }
   };
 
-  // 2. CLOUD LISTENER: Pag may bagong data sa cloud, i-update ang localStorage AT I-RERENDER ANG UI
+  // 3. CLOUD LISTENER & RE-RENDER
   db.ref('live_system').on('value', (snapshot) => {
     const cloudState = snapshot.val();
     if (cloudState) {
       isReceivingFromCloud = true;
 
-      // I-update ang localStorage
       Object.keys(cloudState).forEach(key => {
         const val = typeof cloudState[key] === 'object' ? JSON.stringify(cloudState[key]) : cloudState[key];
         originalSetItem.call(localStorage, key, val);
@@ -3351,8 +3364,7 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
 
       isReceivingFromCloud = false;
 
-      // 🚀 ETO ANG SUSI: I-trigger ang pag-refresh ng screen ng UI para sa lahat!
-      if (typeof load === 'function') load(); 
+      if (typeof load === 'function') load();
       if (typeof renderDashboard === 'function') renderDashboard();
       if (typeof renderInventory === 'function') renderInventory();
       if (typeof renderSyncQueueV2 === 'function') renderSyncQueueV2();
