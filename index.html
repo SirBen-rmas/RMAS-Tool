@@ -1453,6 +1453,7 @@ function finishAddPOSM(imageData){
   const code=document.getElementById("newPosmCode").value.trim().toUpperCase();
   const x={code,bu:document.getElementById("newPosmBU").value,popType:document.getElementById("newPosmType").value.trim(),description:document.getElementById("newPosmDesc").value.trim(),image:imageData||PLACEHOLDER_IMG};
   ITEMS.push(x); state.customPOSM.push({...x,createdBy:session.username,createdAt:new Date().toISOString()});
+  addNewPOSM(x);
   /* Optional initial quantities are loaded as approved starting balance for the new POSM. */
   const seedInputs=[...document.querySelectorAll("[data-new-posm-wh]")];
   seedInputs.forEach(inp=>{
@@ -3498,5 +3499,33 @@ function renderApprovalQueue() {
 
   html += '</table>';
   container.innerHTML = html;
+}
+// ==========================================
+// FIX FOR POSM ADDITION OVERWRITE ISSUE
+// ==========================================
+function addNewPOSM(newPosmData) {
+  // 1. Kumuha ng kasalukuyang items sa localStorage
+  let currentItems = JSON.parse(localStorage.getItem('ITEMS') || '[]');
+
+  // 2. Idagdag ang bagong item
+  currentItems.push(newPosmData);
+
+  // 3. I-save sa localStorage
+  localStorage.setItem('ITEMS', JSON.stringify(currentItems));
+
+  // 4. DIREKTANG I-UPDATE SA FIREBASE (Para hindi ma-overwrite ng lumang cloud data)
+  if (typeof db !== 'undefined') {
+    db.ref('live_system/ITEMS').set(currentItems)
+      .then(() => {
+        console.log("✅ Successfully saved to Firebase!");
+      })
+      .catch((error) => {
+        console.error("❌ Firebase Sync Error:", error);
+      });
+  }
+
+  // 5. Re-render UI
+  if (typeof renderItems === 'function') renderItems();
+  if (typeof renderInventory === 'function') renderInventory();
 }
 </script>
