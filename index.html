@@ -3358,33 +3358,38 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
 
   // 2. CLOUD LISTENER & RE-RENDER
   db.ref('live_system').on('value', (snapshot) => {
-    const cloudState = snapshot.val();
-    if (typeof renderApprovalQueue === 'function') renderApprovalQueue();
-    if (cloudState) {
-      isReceivingFromCloud = true;
+  const cloudState = snapshot.val();
+  if (typeof renderApprovalQueue === 'function') renderApprovalQueue();
+  
+  if (cloudState) {
+    isReceivingFromCloud = true;
 
-      // I-update ang localStorage gamit ang cloud data
-      Object.keys(cloudState).forEach(key => {
-        const val = typeof cloudState[key] === 'object' ? JSON.stringify(cloudState[key]) : cloudState[key];
-        originalSetItem.call(localStorage, key, val);
-      });
+    // I-update ang localStorage gamit ang cloud data
+    Object.keys(cloudState).forEach(key => {
+      const val = typeof cloudState[key] === 'object' ? JSON.stringify(cloudState[key]) : cloudState[key];
+      originalSetItem.call(localStorage, key, val);
+    });
 
-      isReceivingFromCloud = false;
+    isReceivingFromCloud = false;
 
-      // Re-parse internal Javascript state variables
-      try {
-        if (typeof load === 'function') load();
-        if (localStorage.getItem('ITEMS')) ITEMS = JSON.parse(localStorage.getItem('ITEMS'));
-        if (localStorage.getItem('state')) state = JSON.parse(localStorage.getItem('state'));
-      } catch(e) {
-        console.log("State reload notice:", e);
-      }
-
-      // Re-render UI views
-      if (typeof renderDashboard === 'function') renderDashboard();
-      if (typeof renderInventory === 'function') renderInventory();
-      if (typeof renderSyncQueueV2 === 'function') renderSyncQueueV2();
+    // Re-parse internal Javascript state variables
+    try {
+      if (typeof loadFromStorage === 'function') loadFromStorage();
+      if (typeof load === 'function') load();
+      if (localStorage.getItem('ITEMS')) ITEMS = JSON.parse(localStorage.getItem('ITEMS'));
+      if (localStorage.getItem('state')) state = JSON.parse(localStorage.getItem('state'));
+    } catch(e) {
+      console.log("State reload notice:", e);
     }
+
+    // Re-render UI views para sa kabilang device
+    if (typeof renderAll === 'function') renderAll();
+    if (typeof renderItems === 'function') renderItems();
+    if (typeof renderInventory === 'function') renderInventory();
+    if (typeof renderDashboard === 'function') renderDashboard();
+    if (typeof renderSyncQueueV2 === 'function') renderSyncQueueV2();
+  }
+});
 
     // 🟢 BINUKSAN NA ANG PINTO: Tapos na ang initial fetch mula sa Firebase
     isInitialLoadComplete = true;
@@ -3501,30 +3506,33 @@ function renderApprovalQueue() {
   container.innerHTML = html;
 }
 // ==========================================
-// FIX FOR POSM ADDITION OVERWRITE ISSUE
-// ==========================================
+// FIX: Isama ang state at customPOSM sa Firebase Sync
 function addNewPOSM(newPosmData) {
-  // 1. Kumuha ng kasalukuyang items sa localStorage
+  // 1. Kumuha at mag-update ng ITEMS at state.customPOSM
   let currentItems = JSON.parse(localStorage.getItem('ITEMS') || '[]');
-
-  // 2. Idagdag ang bagong item
   currentItems.push(newPosmData);
-
-  // 3. I-save sa localStorage
   localStorage.setItem('ITEMS', JSON.stringify(currentItems));
 
-  // 4. DIREKTANG I-UPDATE SA FIREBASE (Para hindi ma-overwrite ng lumang cloud data)
-  if (typeof db !== 'undefined') {
-    db.ref('live_system/ITEMS').set(currentItems)
-      .then(() => {
-        console.log("✅ Successfully saved to Firebase!");
-      })
-      .catch((error) => {
-        console.error("❌ Firebase Sync Error:", error);
-      });
+  // 2. Siguraduhing naisusulat ang buong state sa localStorage
+  if (typeof state !== 'undefined') {
+    localStorage.setItem('rmas_state', JSON.stringify(state));
   }
 
-  // 5. Re-render UI
+  // 3. DIREKTANG I-PUSH SA FIREBASE (Kabilang ang state.customPOSM at ITEMS)
+  if (typeof db !== 'undefined') {
+    db.ref('live_system/ITEMS').set(currentItems);
+    
+    if (typeof state !== 'undefined' && state.customPOSM) {
+      db.ref('live_system/customPOSM').set(state.customPOSM);
+    }
+    
+    // I-sync din ang pangkalahatang state para ma-trigger ang real-time update sa kabilang laptop
+    db.ref('live_system/lastUpdated').set(Date.now());
+    console.log("✅ Pushed new POSM directly to Firebase Cloud!");
+  }
+
+  // 4. Re-render UI
+  if (typeof renderAll === 'function') renderAll();
   if (typeof renderItems === 'function') renderItems();
   if (typeof renderInventory === 'function') renderInventory();
 }
