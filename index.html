@@ -3317,11 +3317,12 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
 <!-- FIREBASE FULL AUTOMATIC SYNC WITH UI RE-RENDER -->
 <script>
 (function() {
-  if (typeof firebase === 'undefined') return;
+  // This page loads the Firebase compat build, so use its API consistently.
+  // The previous code mixed modular and compat APIs and left `db` undefined
+  // whenever an app had already been initialized.
+  if (typeof firebase === 'undefined' || typeof firebase.database !== 'function') return;
 
-  // 1. SAFETY CHECK: Siguraduhing na-initialize na ang Firebase App
-  if (!firebase.apps.length) {
-    const firebaseConfig = {
+  const firebaseConfig = {
   apiKey: "AIzaSyB3G5JP7DY36orJKn9q737gG7BbGiEQ6fQ",
   authDomain: "rmas-tool.firebaseapp.com",
   databaseURL: "https://rmas-tool-default-rtdb.firebaseio.com",
@@ -3330,11 +3331,11 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
   messagingSenderId: "507664166536",
   appId: "1:507664166536:web:fd9835d42891b9d275b93d",
   measurementId: "G-PCBBKC1TG6"
-};
+  };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  let isReceivingFromCloud = false;
 
   // 2. INTERCEPTOR
   const originalSetItem = localStorage.setItem;
