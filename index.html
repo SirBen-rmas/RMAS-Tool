@@ -3358,7 +3358,7 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
   // 2. CLOUD LISTENER & RE-RENDER
   db.ref('live_system').on('value', (snapshot) => {
     const cloudState = snapshot.val();
-    
+    if (typeof renderApprovalQueue === 'function') renderApprovalQueue();
     if (cloudState) {
       isReceivingFromCloud = true;
 
@@ -3389,4 +3389,114 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
     isInitialLoadComplete = true;
   });
 })();
+// ==========================================
+// ADMIN DISPOSAL APPROVAL SYSTEM
+// ==========================================
+
+// 1. Function para sa pagbawas sa aktwal na Inventory (Execute)
+function executeDisposal(disposalItems) {
+  let currentItems = JSON.parse(localStorage.getItem('ITEMS') || '[]');
+
+  disposalItems.forEach(dItem => {
+    const itemInStock = currentItems.find(i => i.id === dItem.id || i.code === dItem.code);
+    if (itemInStock) {
+      itemInStock.qty = Math.max(0, itemInStock.qty - dItem.qty);
+    }
+  });
+
+  // Save at auto-sync sa Firebase
+  localStorage.setItem('ITEMS', JSON.stringify(currentItems));
+}
+
+// 2. Function kapag pinitik ni Admin ang "Approve" button
+function approveDisposalRequest(requestId) {
+  let pendingDisposals = JSON.parse(localStorage.getItem('pending_disposals') || '[]');
+  const reqIndex = pendingDisposals.findIndex(r => r.id === requestId);
+  
+  if (reqIndex !== -1) {
+    const request = pendingDisposals[reqIndex];
+
+    // Dito pa lang BABAWAS ang stock sa Inventory
+    executeDisposal(request.items);
+
+    // Alisin sa Pending List
+    pendingDisposals.splice(reqIndex, 1);
+    localStorage.setItem('pending_disposals', JSON.stringify(pendingDisposals));
+
+    alert("✅ Approved! Nabawasan na ang stock sa Inventory.");
+    
+    // Re-render UI
+    renderApprovalQueue();
+    if (typeof renderInventory === 'function') renderInventory();
+    if (typeof renderDashboard === 'function') renderDashboard();
+  }
+}
+// Function kapag nag-submit ng Disposal
+function handleDisposalSubmit(disposalData) {
+  // Kung walang ipinasa na data, susubukang kumuha mula sa form inputs/state
+  const items = disposalData || (typeof getDisposalFormData === 'function' ? getDisposalFormData() : []);
+
+  const isAdmin = currentUser && currentUser.role === 'ADMIN';
+
+  if (isAdmin) {
+    executeDisposal(items);
+    alert("✅ Disposal executed immediately by Admin.");
+  } else {
+    const pendingDisposals = JSON.parse(localStorage.getItem('pending_disposals') || '[]');
+    
+    const newRequest = {
+      id: 'DISP-' + Date.now(),
+      type: 'DISPOSAL',
+      items: items,
+      requestedBy: currentUser ? (currentUser.name || currentUser.username) : 'RMAS Team',
+      status: 'PENDING',
+      timestamp: new Date().toLocaleString()
+    };
+
+    pendingDisposals.push(newRequest);
+    localStorage.setItem('pending_disposals', JSON.stringify(pendingDisposals));
+    
+    alert("⏳ Naisubmit na ang Disposal! Naka-pending ito para sa Approval ng Admin bago mabawasan sa inventory.");
+  }
+  
+  if (typeof renderInventory === 'function') renderInventory();
+}
+// 3. Render Table para sa Pending Approvals (Ipakita lang sa Admin)
+function renderApprovalQueue() {
+  const container = document.getElementById('approvalList');
+  if (!container) return;
+
+  const pendingDisposals = JSON.parse(localStorage.getItem('pending_disposals') || '[]');
+
+  if (pendingDisposals.length === 0) {
+    container.innerHTML = '<p style="color:#666; margin:0;"><i>Walang pending disposal requests sa ngayon.</i></p>';
+    return;
+  }
+
+  let html = `<table border="1" style="width:100%; border-collapse:collapse; text-align:left; background:#fff; font-size:13px;">
+    <tr style="background:#f2f2f2;">
+      <th style="padding:8px;">ID</th>
+      <th style="padding:8px;">Requested By</th>
+      <th style="padding:8px;">Items for Disposal</th>
+      <th style="padding:8px;">Time</th>
+      <th style="padding:8px;">Action</th>
+    </tr>`;
+
+  pendingDisposals.forEach(req => {
+    const itemDetails = req.items.map(i => `${i.name || i.code} (${i.qty} pcs)`).join(', ');
+
+    html += `<tr>
+      <td style="padding:8px;"><b>${req.id}</b></td>
+      <td style="padding:8px;">${req.requestedBy}</td>
+      <td style="padding:8px;">${itemDetails}</td>
+      <td style="padding:8px;">${req.timestamp}</td>
+      <td style="padding:8px;">
+        <button onclick="approveDisposalRequest('${req.id}')" style="background:#28a745; color:#fff; border:none; padding:6px 12px; cursor:pointer; border-radius:4px; font-weight:bold;">Approve & Deduct Stock</button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</table>';
+  container.innerHTML = html;
+}
 </script>
