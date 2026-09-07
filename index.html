@@ -3314,7 +3314,7 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
   window.exportDailyBundle=async()=>{await handleExport('INVENTORY_SNAPSHOT');await handleExport('DAILY_TRANSACTIONS');};
 })();
 </script>
-<!-- FIREBASE FULL AUTOMATIC SYNC WITH INVALID PATH FILTER -->
+<!-- FIREBASE AUTOMATIC SYNC WITH INITIAL LOAD PROTECTION -->
 <script>
 (function() {
   if (typeof firebase === 'undefined') return;
@@ -3323,7 +3323,7 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "your-app.firebaseapp.com",
-      databaseURL: "https://rmas-tool-default-rtdb.firebaseio.com",
+      databaseURL: "https://your-app-default-rtdb.firebaseio.com",
       projectId: "your-app",
       storageBucket: "your-app.appspot.com",
       messagingSenderId: "123456789",
@@ -3334,16 +3334,17 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
 
   const db = firebase.database();
   let isReceivingFromCloud = false;
+  let isInitialLoadComplete = false; // 🛑 HARANG: Hindi magse-save sa cloud hangga't 'di pumasok ang cloud data
 
-  // 1. INTERCEPTOR: May filter na para sa bawal na Firebase keys
+  // 1. INTERCEPTOR (Magse-save lang sa cloud pag tapos na ang initial download)
   const originalSetItem = localStorage.setItem;
   localStorage.setItem = function(key, value) {
     originalSetItem.apply(this, arguments);
 
-    // Filter: Huwag i-sync sa Firebase kung internal key ito o may bawal na characters
     const isInvalidKey = /[\.\#\$\/\[\]\:]/.test(key) || key.startsWith('firebase:');
 
-    if (!isReceivingFromCloud && !isInvalidKey) {
+    // Siguraduhing tapos na ang initial load bago mag-push sa Firebase
+    if (isInitialLoadComplete && !isReceivingFromCloud && !isInvalidKey) {
       try {
         const parsedValue = JSON.parse(value);
         db.ref('live_system/' + key).set(parsedValue);
@@ -3356,10 +3357,11 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
   // 2. CLOUD LISTENER & RE-RENDER
   db.ref('live_system').on('value', (snapshot) => {
     const cloudState = snapshot.val();
+    
     if (cloudState) {
       isReceivingFromCloud = true;
 
-      // I-update ang localStorage
+      // I-update ang localStorage gamit ang cloud data
       Object.keys(cloudState).forEach(key => {
         const val = typeof cloudState[key] === 'object' ? JSON.stringify(cloudState[key]) : cloudState[key];
         originalSetItem.call(localStorage, key, val);
@@ -3367,20 +3369,23 @@ window.addEventListener("load",()=>setTimeout(initDailyExtractV8,250));
 
       isReceivingFromCloud = false;
 
-      // Force reload ng global variables bago mag-render
+      // Re-parse internal Javascript state variables
       try {
         if (typeof load === 'function') load();
         if (localStorage.getItem('ITEMS')) ITEMS = JSON.parse(localStorage.getItem('ITEMS'));
         if (localStorage.getItem('state')) state = JSON.parse(localStorage.getItem('state'));
       } catch(e) {
-        console.log("Re-parsing state notice:", e);
+        console.log("State reload notice:", e);
       }
 
-      // Re-render UI
+      // Re-render UI views
       if (typeof renderDashboard === 'function') renderDashboard();
       if (typeof renderInventory === 'function') renderInventory();
       if (typeof renderSyncQueueV2 === 'function') renderSyncQueueV2();
     }
+
+    // 🟢 BINUKSAN NA ANG PINTO: Tapos na ang initial fetch mula sa Firebase
+    isInitialLoadComplete = true;
   });
 })();
 </script>
